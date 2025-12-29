@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark"> <!-- Forced Dark Mode for Screen -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="نظام الاستعلام عن لجان الاختبارات - مدارس الثغر النموذجية">
+    <title>مدارس الثغر النموذجية - استعلام اللجان</title>
+    
+    <!-- Favicon: Ministry Logo -->
+    <link rel="icon" type="image/png" href="assets/education_ministry.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Tajawal', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'shimmer': 'shimmer 2s infinite linear'
+                    },
+                    keyframes: {
+                        'shake': {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        },
+                        'shimmer': {
+                            '0%': { backgroundPosition: '-1000px 0' },
+                            '100%': { backgroundPosition: '1000px 0' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+
+        /* --- Skeleton Loader --- */
+        .skeleton {
+            background: #1f2937;
+            background-image: linear-gradient(to right, #1f2937 0%, #374151 20%, #1f2937 40%, #1f2937 100%);
+            background-repeat: no-repeat;
+            background-size: 800px 104px;
+            animation: shimmer 1.5s infinite linear forwards;
+        }
+        
+        @media (max-width: 768px) {
+            .skeleton { height: auto !important; min-height: 80px; }
+        }
+
+        /* --- Print Settings (White Paper Enforcement) --- */
+        @media print {
+            @page { 
+                size: A4 landscape; 
+                margin: 5mm; 
+            }
+            
+            /* Force White Backgrounds Globally */
+            html, body {
+                background-color: #ffffff !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Hide unwanted elements */
+            .no-print, header, footer { display: none !important; }
+            
+            /* Ensure Result Section is visible */
+            #result-section { 
+                display: block !important; 
+                opacity: 1 !important; 
+                visibility: visible !important; 
+                width: 100% !important;
+            }
+            
+            /* Card Styling for Print */
+            #student-card {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 auto !important;
+                box-shadow: none !important;
+                border: 2px solid #000000 !important;
+                background-color: #ffffff !important; /* Force White Card */
+                color: #000000 !important;
+                page-break-inside: avoid;
+                transform: scale(1);
+            }
+
+            /* Header Branding in Print (Keep Color if Printer allows, else nice Grayscale) */
+            #student-card .bg-brand-600 {
+                background-color: #0284c7 !important; /* Try to keep header blue */
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Reset Dark Mode Text Colors to Black */
+            #student-card .text-gray-400, 
+            #student-card .dark\:text-gray-500,
+            #student-card .dark\:text-gray-100 {
+                color: #000000 !important;
+            }
+
+            #student-card .text-brand-600,
+            #student-card .dark\:text-brand-400 {
+                color: #000000 !important; /* Or dark blue */
+            }
+
+            /* Remove Dark Backgrounds from inner containers */
+            .bg-gray-800, .dark\:bg-gray-800, 
+            .bg-gray-700, .dark\:bg-gray-700, .dark\:bg-gray-700\/30 {
+                background-color: transparent !important;
+                border: 1px solid #e5e7eb !important; /* Light border for structure */
+            }
+            
+            /* Force Grid Layout */
+            #student-card .grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 2rem !important;
+            }
+            #student-card .md\:col-span-2 {
+                grid-column: span 2 / span 2 !important;
+            }
+            #student-card .p-6 {
+                padding: 2.5rem !important;
+            }
+        }
+
+        /* --- PDF Styling --- */
+        #pdf-clone-container { position: fixed; top: -9999px; left: 0; z-index: -1; }
+        .pdf-card-style {
+            width: 270mm !important;
+            margin: 0 auto !important;
+            padding: 10mm !important;
+            background-color: white !important;
+            color: black !important;
+            border: 2px solid #000 !important;
+            direction: rtl;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        .pdf-card-style .grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+        .pdf-card-style .md\:col-span-2 {
+            grid-column: span 2 / span 2 !important;
+        }
+
+        .pdf-school-name {
+            font-size: 1.25rem !important;
+            font-weight: 800 !important;
+            margin-top: 5px !important;
+        }
+
+        /* --- UI Elements --- */
+        #toast-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            padding: 12px 24px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #1f2937;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastFadeIn 0.3s ease-out;
+            backdrop-filter: blur(4px);
+        }
+        .dark .toast { background: rgba(255, 255, 255, 0.95); color: #1f2937; }
+        .toast-success i { color: #4ade80; }
+        .toast-error i { color: #f87171; }
+        .toast-info i { color: #60a5fa; }
+
+        @keyframes toastFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .util-btn { transition: all 0.2s ease; }
+        .util-btn:hover { transform: translateY(-2px); }
+        .util-btn:active { transform: translateY(0) scale(0.98); }
+        
+        .util-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .loader-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .input-error {
+            background-color: #450a0a !important;
+            border-color: #f87171 !important;
+            color: #fca5a5 !important;
+        }
+        
+        .clear-btn {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .clear-btn:hover {
+            color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Header Area -->
+    <header class="w-full py-4 md:py-6 no-print bg-gray-900">
+        <div class="container mx-auto px-6 flex items-center justify-center md:justify-between">
+            <div class="flex flex-col md:flex-row items-center gap-0 md:gap-4 select-none w-full md:w-auto" role="banner">
+                <img src="assets/education_ministry.png" alt="وزارة التعليم" class="h-32 md:h-48 w-auto object-contain flex-shrink-0" onerror="this.style.display='none'">
+                <div class="flex flex-col items-center md:items-start md:border-r-2 border-gray-700 md:pr-4 -mt-4 md:mt-0">
+                    <h1 class="text-xl md:text-3xl font-black text-white tracking-tight leading-tight text-center md:text-right">
+                        الإدارة العامة لمدارس الثغر النموذجية
+                    </h1>
+                    <span class="text-brand-600 font-bold text-base md:text-xl mt-1 text-center md:text-right">
+                        القسم المتوسط
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 flex flex-col items-center justify-start gap-8 pt-4 md:pt-12" role="main">
+
+        <!-- Search Area -->
+        <section id="search-section" class="w-full max-w-md transition-all duration-500 no-print" aria-label="البحث">
+            <div class="bg-gray-800 rounded-[2rem] shadow-none p-6 md:p-8 border border-gray-700">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold mb-3 text-white">مرحباً بك 👋</h2>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        أدخل رقم الهوية للحصول على تفاصيل اللجنة والمقعد
+                    </p>
+                </div>
+
+                <div class="relative group mb-5">
+                    <label for="search-input" class="sr-only">رقم الهوية</label>
+                    <input type="text" id="search-input" 
+                        class="block w-full px-4 py-3 text-xl font-bold text-center border-2 border-gray-600 rounded-2xl focus:ring-0 focus:border-brand-500 bg-gray-900/50 text-white transition-all tracking-[0.2em] placeholder-gray-600 outline-none" 
+                        placeholder="رقم الهوية" maxlength="10" autocomplete="off" inputmode="numeric" aria-required="true">
+                    
+                    <button type="button" id="clear-btn" class="clear-btn hidden" aria-label="مسح النص">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                
+                <button id="search-btn" class="util-btn w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-6 rounded-2xl shadow-none flex justify-center items-center gap-3 text-base transition-all">
+                    <span id="btn-text">عرض النتيجة</span>
+                    <i id="btn-icon" class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Skeleton Loader -->
+        <div id="skeleton-loader" class="w-full max-w-2xl hidden opacity-0 transition-opacity">
+            <div class="bg-gray-800 rounded-3xl shadow-sm p-8 space-y-4">
+                <div class="skeleton h-24 w-full rounded-2xl"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="skeleton h-12 rounded-xl"></div>
+                    <div class="skeleton h-12 rounded-xl"></div>
+                </div>
+                <div class="skeleton h-32 w-full rounded-2xl"></div>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <section id="result-section" class="w-full max-w-2xl hidden opacity-0 transition-opacity duration-500" aria-live="polite" role="region" aria-label="نتيجة البحث" lang="ar">
+            <div id="student-card" class="bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-700 relative">
+                
+                <div class="bg-brand-600 p-8 text-white text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none mix-blend-overlay">
+                        <i class="fas fa-id-badge absolute -top-6 -right-6 text-9xl"></i>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-bold relative z-10 mb-2">بطاقة دخول الاختبار</h3>
+                    <p id="res-school" class="text-brand-50 font-bold relative z-10 text-lg opacity-90"></p>
+                </div>
+
+                <div class="p-6 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-2 space-y-6">
+                        <div class="info-group">
+                            <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase">اسم الطالب</label>
+                            <div id="res-name" class="text-lg md:text-xl font-bold text-gray-100 pb-2 border-b border-gray-700"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="info-group">
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase">رقم الهوية</label>
+                                <div id="res-id" class="font-mono font-semibold text-brand-400 text-base md:text-lg"></div>
+                            </div>
+                            <div class="info-group">
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase">الصف</label>
+                                <div id="res-grade" class="font-semibold text-gray-100 text-base md:text-lg"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="info-group">
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase">الدور</label>
+                                <div id="res-class" class="font-semibold text-gray-100 text-base md:text-lg"></div>
+                            </div>
+                             <div class="info-group">
+                                <label class="block text-xs font-bold text-gray-500 mb-1.5 uppercase">اسم اللجنة</label>
+                                <div id="res-committee-no" class="font-bold text-brand-300 text-lg md:text-xl"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-700/30 p-5 rounded-2xl">
+                             <label class="block text-xs font-bold text-gray-500 mb-2 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt"></i> مقر اللجنة
+                             </label>
+                             <div id="res-location" class="font-bold text-gray-100 text-base md:text-lg"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center gap-6 border-t md:border-t-0 md:border-r border-gray-700 pt-8 md:pt-0 md:pr-8">
+                        <div class="text-center w-full">
+                            <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">رقم الجلوس</label>
+                            <div id="res-seat" class="text-5xl sm:text-6xl font-extrabold text-brand-400 tracking-tight leading-none"></div>
+                        </div>
+                        
+                        <div class="p-3 bg-white rounded-2xl shadow-sm border border-gray-100" role="img" aria-label="QR Code">
+                            <div id="qrcode"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden print:block text-center text-xs text-gray-400 p-4 border-t italic">
+                    استخراج إلكتروني - مدارس الثغر النموذجية
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-4 mt-8 justify-center no-print">
+                <button id="print-btn" onclick="window.print()" class="util-btn flex-1 bg-gray-900 hover:bg-black text-white py-3.5 px-6 rounded-2xl shadow-lg flex justify-center items-center gap-2 font-bold transition-transform hover:-translate-y-1" disabled>
+                    <i class="fas fa-print"></i> <span>طباعة</span>
+                </button>
+                <button onclick="downloadPDF()" class="util-btn flex-1 bg-red-600 hover:bg-red-700 text-white py-3.5 px-6 rounded-2xl shadow-lg shadow-red-200 dark:shadow-none flex justify-center items-center gap-2 font-bold transition-transform hover:-translate-y-1">
+                    <i class="fas fa-file-pdf"></i> <span>PDF</span>
+                </button>
+                <button onclick="UIService.resetSearch()" class="util-btn flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white py-3.5 px-6 rounded-2xl shadow-sm flex justify-center items-center gap-2 font-bold transition-transform hover:-translate-y-1">
+                    <i class="fas fa-undo"></i> <span>بحث جديد</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Hidden Container for PDF Cloning -->
+    <div id="pdf-clone-container"></div>
+
+    <footer class="py-6 mt-auto no-print">
+        <div class="container mx-auto px-4 text-center text-xs text-gray-600 font-medium">
+            <span>© 2025 مدارس الثغر النموذجية - جميع الحقوق محفوظة</span>
+        </div>
+    </footer>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const CONFIG = {
+            CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVUh9_yERMZ-jsnw3M9RjSJKF4SCg1DFV1uIPgU5kxtzSAmS8J61NC9kJuUBtQRiNKJWu4jpmW7hn7/pub?gid=0&single=true&output=csv',
+            CACHE_KEY: 'thaghr_data_live_v1',
+        };
+
+        const els = {
+            searchInput: document.getElementById('search-input'),
+            searchBtn: document.getElementById('search-btn'),
+            clearBtn: document.getElementById('clear-btn'),
+            btnText: document.getElementById('btn-text'),
+            btnIcon: document.getElementById('btn-icon'),
+            resultSection: document.getElementById('result-section'),
+            skeletonLoader: document.getElementById('skeleton-loader'),
+        };
+
+        let studentsData = [];
+
+        // DATA SERVICE
+        const DataService = {
+            studentsMap: new Map(),
+
+            getData: async () => {
+                UIService.setLoading(true);
+                try {
+                    return await DataService.fetchFreshData();
+                } catch (err) {
+                    throw err;
+                } finally {
+                    UIService.setLoading(false);
+                }
+            },
+
+            fetchFreshData: async (retries = 3) => {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        return await new Promise((resolve, reject) => {
+                            if (!navigator.onLine) {
+                                reject('CONNECTION_ERROR');
+                                return;
+                            }
+                            const liveUrl = `${CONFIG.CSV_URL}&t=${Date.now()}`;
+                            Papa.parse(liveUrl, {
+                                download: true,
+                                header: true,
+                                skipEmptyLines: true,
+                                complete: (results) => {
+                                    if (results.data?.length) {
+                                        const cleanData = results.data
+                                            .map(row => DataService.normalizeRow(row))
+                                            .filter(s => s.id && s.id !== '---' && s.id.length >= 9);
+                                        if (cleanData.length === 0) { reject('DATA_ERROR'); return; }
+                                        DataService.hydrateMap(cleanData);
+                                        resolve(true);
+                                    } else { reject('DATA_ERROR'); }
+                                },
+                                error: () => reject('CONNECTION_ERROR')
+                            });
+                        });
+                    } catch (e) {
+                        if (i === retries - 1) throw e;
+                        await new Promise(r => setTimeout(r, 800));
+                    }
+                }
+            },
+
+            hydrateMap: (dataArray) => {
+                DataService.studentsMap.clear();
+                dataArray.forEach(student => {
+                    DataService.studentsMap.set(student.id, student);
+                });
+            },
+
+            normalizeRow: (row) => {
+                const rowKeys = Object.keys(row);
+                const getVal = (keywords, exclude = []) => {
+                    const matchKey = rowKeys.find(key => {
+                        const cleanKey = key.trim().toLowerCase();
+                        if (exclude.some(ex => cleanKey.includes(ex.toLowerCase()))) return false;
+                        return keywords.some(kw => cleanKey.includes(kw.toLowerCase()));
+                    });
+                    return matchKey ? (row[matchKey] + '').trim() : '---';
+                };
+                return {
+                    school: getVal(['اسم المدرسة', 'مدرسة', 'school']),
+                    id: getVal(['رقم الهوية', 'هوية', 'id', 'national', 'سجل']),
+                    name: getVal(['اسم الطالب', 'name', 'student'], ['مدرسة', 'school']),
+                    grade: getVal(['الصف', 'grade', 'level', 'مستوى']),
+                    class: getVal(['الدور', 'class', 'فصل', 'شعبة']),
+                    committee: getVal(['اللجنة', 'اسم اللجنة', 'committee', 'comm']),
+                    location: getVal(['مقر اللجنة', 'مقر', 'location', 'مكان']),
+                    seat: getVal(['رقم الجلوس', 'جلوس', 'seat', 'مقعد'])
+                };
+            },
+
+            findStudent: (id) => {
+                return DataService.studentsMap.get(id);
+            }
+        };
+
+        // UI SERVICE
+        const UIService = {
+            setLoading: (isLoading) => {
+                if (isLoading) {
+                    els.btnText.textContent = 'جاري التحديث...';
+                    els.btnIcon.className = 'fas fa-sync-alt loader-spin';
+                    els.searchBtn.disabled = true;
+                    els.skeletonLoader.classList.remove('hidden', 'opacity-0');
+                    els.resultSection.classList.add('hidden');
+                } else {
+                    els.btnText.textContent = 'عرض النتيجة';
+                    els.btnIcon.className = 'fas fa-arrow-left';
+                    els.searchBtn.disabled = false;
+                    els.skeletonLoader.classList.add('opacity-0');
+                    setTimeout(() => els.skeletonLoader.classList.add('hidden'), 300);
+                }
+            },
+
+            triggerInputError: () => {
+                els.searchInput.classList.add('animate-shake', 'input-error');
+                setTimeout(() => els.searchInput.classList.remove('animate-shake'), 500);
+            },
+
+            showToast: (message, type = 'info') => {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                let icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle';
+                toast.className = `toast toast-${type}`;
+                toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            },
+
+            renderResult: (s) => {
+                const fields = {
+                    'res-school': s.school !== '---' ? s.school : '',
+                    'res-name': s.name,
+                    'res-id': s.id,
+                    'res-grade': s.grade,
+                    'res-class': s.class,
+                    'res-committee-no': s.committee,
+                    'res-location': s.location,
+                    'res-seat': s.seat
+                };
+
+                for (const [id, val] of Object.entries(fields)) {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = val || '---';
+                }
+
+                document.getElementById('print-btn')?.removeAttribute('disabled');
+
+                const qrContainer = document.getElementById('qrcode');
+                qrContainer.innerHTML = '';
+                const qrSize = window.innerWidth < 400 ? 110 : 150;
+                new QRCode(qrContainer, {
+                    text: `ID:${s.id}\nSeat:${s.seat}`,
+                    width: qrSize, height: qrSize,
+                    colorDark : "#000000", colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+
+                els.resultSection.classList.remove('hidden');
+                setTimeout(() => els.resultSection.classList.remove('opacity-0'), 50);
+                els.resultSection.scrollIntoView({ behavior: 'smooth' });
+            },
+
+            resetSearch: () => {
+                els.resultSection.classList.add('opacity-0');
+                document.getElementById('print-btn')?.setAttribute('disabled', 'true');
+                setTimeout(() => {
+                    els.resultSection.classList.add('hidden');
+                    els.searchInput.value = '';
+                    els.searchInput.focus();
+                }, 300);
+            }
+        };
+
+        // APP CONTROLLER
+        const App = {
+            init: () => {
+                // Permanently set dark mode
+                document.documentElement.className = 'dark';
+                App.setupListeners();
+                els.searchInput.focus();
+            },
+            setupListeners: () => {
+                els.searchInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                    els.searchInput.classList.remove('input-error');
+                    els.clearBtn.classList.toggle('hidden', e.target.value.length === 0);
+                });
+                els.searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') App.handleSearch();
+                });
+                els.searchBtn.addEventListener('click', App.handleSearch);
+                els.clearBtn.addEventListener('click', () => {
+                    els.searchInput.value = '';
+                    els.searchInput.focus();
+                    els.clearBtn.classList.add('hidden');
+                });
+            },
+            handleSearch: async () => {
+                const query = els.searchInput.value.trim();
+                if (!query || query.length !== 10) {
+                    UIService.triggerInputError();
+                    UIService.showToast('رقم الهوية يجب أن يكون 10 أرقام', 'info');
+                    return;
+                }
+                try {
+                    await DataService.getData();
+                    const student = DataService.findStudent(query);
+                    if (student) {
+                        UIService.renderResult(student);
+                    } else {
+                        UIService.showToast('رقم الهوية غير مسجل في النظام', 'error');
+                    }
+                } catch (err) {
+                    if (err === 'CONNECTION_ERROR') UIService.showToast('تعذر الاتصال بالخادم', 'error');
+                    else UIService.showToast('خطأ في البيانات المستلمة', 'error');
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', App.init);
+
+        window.downloadPDF = () => {
+            const original = document.getElementById('student-card');
+            const clone = original.cloneNode(true);
+            
+            // Explicitly force White bg and Black text on the clone for PDF
+            clone.style.backgroundColor = '#ffffff';
+            clone.style.color = '#000000';
+            clone.style.borderColor = '#000000';
+            clone.classList.remove('dark:bg-gray-800', 'dark:border-gray-700', 'bg-gray-800', 'border-gray-700');
+            
+            // Fix text colors inside the clone
+            clone.querySelectorAll('*').forEach(el => {
+                 // Remove any dark mode classes that might interfere
+                 el.classList.remove('dark:text-white', 'text-white', 'dark:text-gray-100', 'text-gray-100', 'dark:text-gray-400', 'text-gray-400');
+                 
+                 // Force black text unless it's the header brand text (optional, but black is safer)
+                 if (!el.classList.contains('text-brand-50')) {
+                     el.style.color = '#000000';
+                 }
+            });
+            
+            // Fix Icons
+            clone.querySelectorAll('i').forEach(icon => icon.style.color = '#000000');
+            
+            // Fix inner containers backgrounds
+            const darkContainers = clone.querySelectorAll('.bg-gray-700\\/30, .bg-gray-800');
+            darkContainers.forEach(el => {
+                el.style.backgroundColor = 'transparent';
+                el.style.border = '1px solid #ddd';
+                el.classList.remove('bg-gray-700/30', 'bg-gray-800');
+            });
+
+            clone.classList.add('pdf-card-style'); 
+            
+            const container = document.getElementById('pdf-clone-container'); 
+            container.innerHTML=''; 
+            container.appendChild(clone);
+
+            UIService.showToast('جاري تصدير البطاقة...', 'info');
+            
+            const pdfOptions = {
+                margin: [10, 10],
+                filename: `Exam_Card_${els.searchInput.value}.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { 
+                    scrollY: 0,
+                    scale: 1.5,
+                    useCORS: true,
+                    width: clone.offsetWidth 
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(pdfOptions).from(clone).save().then(() => {
+                container.innerHTML = '';
+                UIService.showToast('تم الحفظ', 'success');
+            });
+        };
+    </script>
+</body>
+</html>
