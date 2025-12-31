@@ -6,8 +6,8 @@
     <meta name="description" content="نظام الاستعلام عن لجان الاختبارات - مدارس الثغر النموذجية">
     <title>مدارس الثغر النموذجية - استعلام اللجان</title>
     
-    <!-- Favicon: Ministry Logo (Updated Path) -->
-    <link rel="icon" type="image/png" href="/assets/education_ministry.png">
+    <!-- Favicon: Ministry Logo -->
+    <link rel="icon" type="image/png" href="assets/education_ministry.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -80,14 +80,13 @@
             .skeleton { height: auto !important; min-height: 80px; }
         }
 
-        /* --- Print Settings (Fixed Black Page & Shift Issue) --- */
+        /* --- Print Settings --- */
         @media print {
             @page { 
                 size: A4 portrait; 
-                margin: 0mm; /* Reset page margins to control via body padding if needed */
+                margin: 0; 
             }
             
-            /* Reset Root Elements */
             :root, html, body {
                 background-color: #ffffff !important;
                 background: #ffffff !important;
@@ -95,11 +94,13 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
                 margin: 0 !important;
-                padding: 0 !important;
-                /* Reset Flex/Height to prevent page shift */
-                display: block !important; 
+                padding: 10mm 0 !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: flex-start !important;
+                width: 100% !important;
                 height: auto !important;
-                min-height: auto !important;
+                min-height: 100vh !important;
                 overflow: visible !important;
             }
 
@@ -109,34 +110,31 @@
                 display: block !important; 
                 opacity: 1 !important; 
                 visibility: visible !important; 
-                width: 100% !important;
-                margin: 0 !important;
-                padding-top: 10mm !important; /* Safe top margin */
+                width: 210mm !important; 
+                max-width: 100% !important;
+                background-color: transparent !important;
             }
             
             #student-card {
-                width: 190mm !important; /* Safe width for A4 */
-                margin: 0 auto !important; /* Horizontal Centering */
+                width: 190mm !important; 
+                margin: 0 auto !important; 
                 box-shadow: none !important;
                 border: 2px solid #000 !important;
-                background-color: #ffffff !important;
+                background-color: #ffffff !important; 
                 color: #000000 !important;
                 page-break-inside: avoid;
-                transform: none !important; /* Remove scaling that might cause shifts */
+                transform: none !important; 
             }
             
-            /* FORCE TEXT BLACK (Override Tailwind Whites) */
             #student-card *, #student-card h1, #student-card h2, #student-card h3, #student-card div, #student-card span, #student-card p, #student-card label, #student-card li {
                 color: #000000 !important;
                 text-shadow: none !important;
             }
             
-            /* Exception for Brand Colors if printer supports it */
             #student-card .text-brand-600, #student-card .text-brand-400, #student-card .text-brand-300 {
                 color: #0284c7 !important;
             }
 
-            /* Reset Grids & Spacing */
             #student-card .grid {
                 display: grid !important;
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -145,7 +143,6 @@
             #student-card .md\:col-span-2 { grid-column: span 2 / span 2 !important; }
             #student-card .p-6 { padding: 1.5rem !important; }
 
-            /* Clear Backgrounds */
             .dark\:bg-gray-800, .bg-gray-800, .bg-gray-700, .dark\:bg-gray-700, .bg-gray-700\/30, .dark\:bg-gray-700\/30 {
                 background-color: transparent !important;
                 border: 1px solid #ddd !important;
@@ -278,6 +275,7 @@
             font-weight: bold;
         }
         .print-list {
+            /* Default for screen */
             list-style-type: disc;
             list-style-position: inside; 
             padding-right: 0.5rem;
@@ -297,9 +295,13 @@
     <header class="w-full py-4 md:py-6 no-print bg-gray-900">
         <div class="container mx-auto px-6 flex items-center justify-center md:justify-between">
             <div class="flex flex-col md:flex-row items-center gap-0 md:gap-4 select-none w-full md:w-auto" role="banner">
-                <!-- Updated Image Path -->
-                <img src="/assets/education_ministry.png" alt="وزارة التعليم" class="h-32 md:h-48 w-auto object-contain flex-shrink-0" onerror="this.style.display='none'">
-                <div class="flex flex-col items-center md:items-start md:border-r-2 border-gray-700 md:pr-4 -mt-4 md:mt-0">
+                <!-- 
+                   Applied negative margins (-mt-6 -mr-6) to fix extra whitespace in the image
+                   Increased height to h-40/h-56 to compensate and make logo big and clear
+                -->
+                <img src="assets/education_ministry.png" alt="وزارة التعليم" class="h-40 md:h-56 w-auto object-contain flex-shrink-0 -mt-6 -mr-6" onerror="this.style.display='none'">
+                
+                <div class="flex flex-col items-center md:items-start md:border-r-2 border-gray-700 md:pr-4 -mt-8 md:mt-0">
                     <h1 class="text-xl md:text-3xl font-black text-white tracking-tight leading-tight text-center md:text-right">
                         الإدارة العامة لمدارس الثغر النموذجية
                     </h1>
@@ -364,8 +366,7 @@
                         <h2 class="text-black font-bold text-lg leading-tight">مجمع الثغر النموذجي بالخالدية</h2>
                         <span class="text-brand-600 font-bold text-sm">القسم المتوسط</span>
                     </div>
-                    <!-- Updated Image Path -->
-                    <img src="/assets/education_ministry.png" alt="وزارة التعليم" class="h-16 w-auto object-contain" onerror="this.style.display='none'">
+                    <img src="assets/education_ministry.png" alt="وزارة التعليم" class="h-16 w-auto object-contain" onerror="this.style.display='none'">
                 </div>
 
                 <div class="p-6 md:p-8">
@@ -482,9 +483,7 @@
             </div>
 
             <div class="flex flex-wrap gap-4 mt-8 justify-center no-print">
-                <button id="print-btn" onclick="window.print()" class="util-btn flex-1 bg-gray-900 hover:bg-black text-white py-3.5 px-6 rounded-2xl shadow-lg flex justify-center items-center gap-2 font-bold transition-transform hover:-translate-y-1" disabled aria-label="طباعة البطاقة">
-                    <i class="fas fa-print"></i> <span>طباعة</span>
-                </button>
+                <!-- Print Button Removed -->
                 <button onclick="downloadPDF()" class="util-btn flex-1 bg-red-600 hover:bg-red-700 text-white py-3.5 px-6 rounded-2xl shadow-lg shadow-red-200 dark:shadow-none flex justify-center items-center gap-2 font-bold transition-transform hover:-translate-y-1" aria-label="حفظ كملف PDF">
                     <i class="fas fa-file-pdf"></i> <span>PDF</span>
                 </button>
@@ -546,7 +545,7 @@
                     try {
                         return await new Promise((resolve, reject) => {
                             if (!navigator.onLine) {
-                                reject('CONNECTION_ERROR');
+                                reject(new Error('CONNECTION_ERROR'));
                                 return;
                             }
                             const liveUrl = `${CONFIG.CSV_URL}&t=${Date.now()}`;
@@ -560,12 +559,12 @@
                                         const cleanData = results.data
                                             .map(row => DataService.normalizeRow(row))
                                             .filter(s => s.id && s.id !== '---' && s.id.length >= 9);
-                                        if (cleanData.length === 0) { reject('DATA_ERROR'); return; }
+                                        if (cleanData.length === 0) { reject(new Error('DATA_ERROR')); return; }
                                         DataService.hydrateMap(cleanData);
                                         resolve(true);
-                                    } else { reject('DATA_ERROR'); }
+                                    } else { reject(new Error('DATA_ERROR')); }
                                 },
-                                error: () => reject('CONNECTION_ERROR')
+                                error: (err) => reject(new Error('CONNECTION_ERROR'))
                             });
                         });
                     } catch (e) {
@@ -663,7 +662,7 @@
                     if (el) el.textContent = val || '---';
                 }
 
-                document.getElementById('print-btn')?.removeAttribute('disabled');
+                // Removed print button enabling logic
 
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = '';
@@ -686,7 +685,7 @@
 
             resetSearch: () => {
                 els.resultSection.classList.add('opacity-0');
-                document.getElementById('print-btn')?.setAttribute('disabled', 'true');
+                // Removed print button disabling logic
                 setTimeout(() => {
                     els.resultSection.classList.add('hidden');
                     els.searchInput.value = '';
@@ -698,8 +697,18 @@
         // APP CONTROLLER
         const App = {
             init: () => {
+                // Permanently set dark mode
                 document.documentElement.className = 'dark';
                 App.setupListeners();
+                
+                // Preload Data on Start
+                if (navigator.onLine) {
+                    DataService.getData().catch(e => {
+                         // Silent fail on init, real error on search
+                         console.log("Init fetch failed, will retry on search");
+                    }); 
+                }
+                
                 els.searchInput.focus();
             },
             setupListeners: () => {
@@ -734,7 +743,8 @@
                         UIService.showToast('رقم الهوية غير مسجل في النظام', 'error');
                     }
                 } catch (err) {
-                    if (err === 'CONNECTION_ERROR') UIService.showToast('تعذر الاتصال بالخادم', 'error');
+                    const errMsg = (err.message || err).toString();
+                    if (errMsg.includes('CONNECTION_ERROR')) UIService.showToast('تعذر الاتصال بالخادم', 'error');
                     else UIService.showToast('خطأ في البيانات المستلمة', 'error');
                 }
             }
@@ -746,7 +756,7 @@
             const original = document.getElementById('student-card');
             const clone = original.cloneNode(true);
             
-            // Explicitly force White bg and Black text on the clone for PDF
+            // --- FIX FOR PDF COLORS ---
             clone.style.backgroundColor = '#ffffff';
             clone.style.color = '#000000';
             clone.style.borderColor = '#000000';
@@ -759,13 +769,28 @@
                 header.style.borderBottom = '3px solid #0284c7';
             }
 
-            // Fix all texts to black (brute force for PDF safety)
+            // Fix all texts to black
             clone.querySelectorAll('*').forEach(el => {
-                 el.style.color = '#000000';
-                 // Keep brand colors if needed, but black is safer for text visibility issue
-                 if (el.classList.contains('text-brand-600') || el.classList.contains('text-brand-400')) {
-                     el.style.color = '#0284c7';
+                 el.classList.remove('dark:text-white', 'text-white', 'dark:text-gray-100', 'text-gray-100', 'dark:text-gray-400', 'text-gray-400', 'text-gray-200', 'text-gray-300');
+                 
+                 // Handle specific brand colors
+                 if (el.classList.contains('text-brand-600') || el.classList.contains('text-brand-400') || el.classList.contains('text-brand-300')) {
+                     el.style.color = '#0284c7'; // Force brand blue
+                 } else {
+                     el.style.color = '#000000'; // Everything else black
                  }
+            });
+            
+            // Force table headers to gray/black
+            clone.querySelectorAll('.custom-table th').forEach(th => {
+                th.style.backgroundColor = '#374151';
+                th.style.color = '#ffffff';
+            });
+
+            // Force table body text
+            clone.querySelectorAll('.custom-table td').forEach(td => {
+                td.style.color = '#000000';
+                td.style.borderColor = '#4b5563';
             });
             
             // Fix Icons
@@ -790,7 +815,10 @@
             // Handle images (logos) in PDF
             clone.querySelectorAll('img').forEach(img => {
                 if (img.src.includes('education_ministry')) {
-                    img.src = '/assets/education_ministry.png';
+                    img.src = 'assets/education_ministry.png';
+                    // Increase logo size specifically for PDF
+                    img.style.height = '120px';
+                    img.style.width = 'auto';
                 }
                 
                 if(img.style.display === 'none') {
