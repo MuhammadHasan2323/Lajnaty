@@ -7,7 +7,7 @@
     <title>مدارس الثغر النموذجية - استعلام اللجان</title>
     
     <!-- Favicon: Ministry Logo (Updated Path) -->
-    <link rel="icon" type="image/png" href="assets/education_ministry.png">
+    <link rel="icon" type="image/png" href="/assets/education_ministry.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -80,14 +80,14 @@
             .skeleton { height: auto !important; min-height: 80px; }
         }
 
-        /* --- Print Settings (Fixed Black Page Issue) --- */
+        /* --- Print Settings (Fixed Black Page & Shift Issue) --- */
         @media print {
             @page { 
                 size: A4 portrait; 
-                margin: 0; 
+                margin: 0mm; /* Reset page margins to control via body padding if needed */
             }
             
-            /* Aggressively force white background on root elements */
+            /* Reset Root Elements */
             :root, html, body {
                 background-color: #ffffff !important;
                 background: #ffffff !important;
@@ -95,13 +95,12 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
                 margin: 0 !important;
-                padding: 10mm 0 !important;
-                display: flex !important;
-                justify-content: center !important;
-                align-items: flex-start !important;
-                width: 100% !important;
+                padding: 0 !important;
+                /* Reset Flex/Height to prevent page shift */
+                display: block !important; 
                 height: auto !important;
-                min-height: 100vh !important;
+                min-height: auto !important;
+                overflow: visible !important;
             }
 
             .no-print { display: none !important; }
@@ -110,23 +109,34 @@
                 display: block !important; 
                 opacity: 1 !important; 
                 visibility: visible !important; 
-                width: 210mm !important; 
-                max-width: 100% !important;
-                background-color: transparent !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding-top: 10mm !important; /* Safe top margin */
             }
             
             #student-card {
-                width: 190mm !important; 
-                margin: 0 auto !important; 
+                width: 190mm !important; /* Safe width for A4 */
+                margin: 0 auto !important; /* Horizontal Centering */
                 box-shadow: none !important;
                 border: 2px solid #000 !important;
-                background-color: #ffffff !important; /* Force card white */
+                background-color: #ffffff !important;
                 color: #000000 !important;
                 page-break-inside: avoid;
-                transform: scale(1);
+                transform: none !important; /* Remove scaling that might cause shifts */
             }
             
-            /* Reset Layout for Print */
+            /* FORCE TEXT BLACK (Override Tailwind Whites) */
+            #student-card *, #student-card h1, #student-card h2, #student-card h3, #student-card div, #student-card span, #student-card p, #student-card label, #student-card li {
+                color: #000000 !important;
+                text-shadow: none !important;
+            }
+            
+            /* Exception for Brand Colors if printer supports it */
+            #student-card .text-brand-600, #student-card .text-brand-400, #student-card .text-brand-300 {
+                color: #0284c7 !important;
+            }
+
+            /* Reset Grids & Spacing */
             #student-card .grid {
                 display: grid !important;
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -135,28 +145,15 @@
             #student-card .md\:col-span-2 { grid-column: span 2 / span 2 !important; }
             #student-card .p-6 { padding: 1.5rem !important; }
 
-            /* Force all dark backgrounds to be transparent/white in print */
-            .dark\:bg-gray-900, .bg-gray-900,
-            .dark\:bg-gray-800, .bg-gray-800,
-            .dark\:bg-gray-700, .bg-gray-700 {
+            /* Clear Backgrounds */
+            .dark\:bg-gray-800, .bg-gray-800, .bg-gray-700, .dark\:bg-gray-700, .bg-gray-700\/30, .dark\:bg-gray-700\/30 {
                 background-color: transparent !important;
-                background: transparent !important;
+                border: 1px solid #ddd !important;
             }
             
-            /* Force all light text to be black */
-            .text-white, .dark\:text-white, 
-            .text-gray-100, .dark\:text-gray-100, 
-            .text-gray-400, .dark\:text-gray-400,
-            .text-gray-500, .dark\:text-gray-500 {
-                color: #000000 !important;
-            }
-            
-            /* Borders */
-            .dark\:border-gray-700, .border-gray-700 { border-color: #000 !important; }
             .table-border { border: 1px solid #000 !important; }
             .table-header { background-color: #f3f4f6 !important; color: #000 !important; }
 
-            /* Remove bullets in print */
             .print-list {
                 list-style-type: none !important; 
                 padding-right: 0 !important;
@@ -190,7 +187,6 @@
             margin-top: 5px !important;
         }
         
-        /* Custom Bullets for PDF Clone */
         .pdf-card-style .print-list {
             list-style-type: none !important;
             padding-right: 0 !important;
@@ -282,7 +278,6 @@
             font-weight: bold;
         }
         .print-list {
-            /* Default for screen */
             list-style-type: disc;
             list-style-position: inside; 
             padding-right: 0.5rem;
@@ -303,7 +298,7 @@
         <div class="container mx-auto px-6 flex items-center justify-center md:justify-between">
             <div class="flex flex-col md:flex-row items-center gap-0 md:gap-4 select-none w-full md:w-auto" role="banner">
                 <!-- Updated Image Path -->
-                <img src="assets/education_ministry.png" alt="وزارة التعليم" class="h-32 md:h-48 w-auto object-contain flex-shrink-0" onerror="this.style.display='none'">
+                <img src="/assets/education_ministry.png" alt="وزارة التعليم" class="h-32 md:h-48 w-auto object-contain flex-shrink-0" onerror="this.style.display='none'">
                 <div class="flex flex-col items-center md:items-start md:border-r-2 border-gray-700 md:pr-4 -mt-4 md:mt-0">
                     <h1 class="text-xl md:text-3xl font-black text-white tracking-tight leading-tight text-center md:text-right">
                         الإدارة العامة لمدارس الثغر النموذجية
@@ -370,7 +365,7 @@
                         <span class="text-brand-600 font-bold text-sm">القسم المتوسط</span>
                     </div>
                     <!-- Updated Image Path -->
-                    <img src="assets/education_ministry.png" alt="وزارة التعليم" class="h-16 w-auto object-contain" onerror="this.style.display='none'">
+                    <img src="/assets/education_ministry.png" alt="وزارة التعليم" class="h-16 w-auto object-contain" onerror="this.style.display='none'">
                 </div>
 
                 <div class="p-6 md:p-8">
@@ -703,7 +698,6 @@
         // APP CONTROLLER
         const App = {
             init: () => {
-                // Permanently set dark mode
                 document.documentElement.className = 'dark';
                 App.setupListeners();
                 els.searchInput.focus();
@@ -752,7 +746,7 @@
             const original = document.getElementById('student-card');
             const clone = original.cloneNode(true);
             
-            // --- FIX FOR PDF COLORS ---
+            // Explicitly force White bg and Black text on the clone for PDF
             clone.style.backgroundColor = '#ffffff';
             clone.style.color = '#000000';
             clone.style.borderColor = '#000000';
@@ -765,28 +759,13 @@
                 header.style.borderBottom = '3px solid #0284c7';
             }
 
-            // Fix all texts to black
+            // Fix all texts to black (brute force for PDF safety)
             clone.querySelectorAll('*').forEach(el => {
-                 el.classList.remove('dark:text-white', 'text-white', 'dark:text-gray-100', 'text-gray-100', 'dark:text-gray-400', 'text-gray-400', 'text-gray-200', 'text-gray-300');
-                 
-                 // Handle specific brand colors
-                 if (el.classList.contains('text-brand-600') || el.classList.contains('text-brand-400') || el.classList.contains('text-brand-300')) {
-                     el.style.color = '#0284c7'; // Force brand blue
-                 } else {
-                     el.style.color = '#000000'; // Everything else black
+                 el.style.color = '#000000';
+                 // Keep brand colors if needed, but black is safer for text visibility issue
+                 if (el.classList.contains('text-brand-600') || el.classList.contains('text-brand-400')) {
+                     el.style.color = '#0284c7';
                  }
-            });
-            
-            // Force table headers to gray/black
-            clone.querySelectorAll('.custom-table th').forEach(th => {
-                th.style.backgroundColor = '#374151';
-                th.style.color = '#ffffff';
-            });
-
-            // Force table body text
-            clone.querySelectorAll('.custom-table td').forEach(td => {
-                td.style.color = '#000000';
-                td.style.borderColor = '#4b5563';
             });
             
             // Fix Icons
@@ -810,9 +789,8 @@
             
             // Handle images (logos) in PDF
             clone.querySelectorAll('img').forEach(img => {
-                // If it's the specific ministry logo, update source to assets path
-                if (img.src.includes('education_ministry.PNG')) {
-                    img.src = 'assets/education_ministry.png';
+                if (img.src.includes('education_ministry')) {
+                    img.src = '/assets/education_ministry.png';
                 }
                 
                 if(img.style.display === 'none') {
