@@ -736,9 +736,12 @@
             load: async () => {
                 try {
                     const url = `${CONFIG.SCHEDULE_CSV_URL}&t=${Date.now()}`;
+                    console.log('[Schedule] Fetching URL:', url);
                     const response = await fetch(url);
+                    console.log('[Schedule] Response OK:', response.ok, '| Status:', response.status);
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const text = await response.text();
+                    console.log('[Schedule] CSV received, length:', text.length, '| Preview:', text.substring(0, 300));
 
                     const results = Papa.parse(text, {
                         header: false,
@@ -746,6 +749,9 @@
                     });
 
                     const rows = results.data;
+                    console.log('[Schedule] Total rows:', rows.length);
+                    if (rows[0]) console.log('[Schedule] Row 0 (header):', JSON.stringify(rows[0]));
+                    if (rows[1]) console.log('[Schedule] Row 1 (data):', JSON.stringify(rows[1]));
                     // rows[0] = header row, rows[1] = first data row (Sheet row 2)
                     if (!rows || rows.length < 2) return;
 
@@ -756,7 +762,7 @@
                     const resultDay  = (row2[4] || '').trim();
                     const resultDate = (row2[5] || '').trim();
 
-                    // Update exam schedule title
+                    console.log('[Schedule] examTerm(G2):', examTerm, '| examYear(H2):', examYear, '| resultDay(E2):', resultDay, '| resultDate(F2):', resultDate);
                     const termEl = document.getElementById('exam-term');
                     const yearEl = document.getElementById('exam-year');
                     if (termEl && examTerm)  termEl.textContent = examTerm;
@@ -789,7 +795,7 @@
                         }
                     }
                 } catch (e) {
-                    console.error('ScheduleService error:', e);
+                    console.error('[Schedule] FAILED:', e);
                 }
             }
         };
