@@ -420,7 +420,7 @@
                     <!-- Exam Schedule Section -->
                     <div class="border-t-2 border-gray-600 pt-4 mt-2">
                         <div class="text-center mb-3">
-                            <h3 class="text-brand-400 font-bold text-lg">جدول اختبار نهاية الفصل الدراسي <span id="exam-term">الأول</span> للعام <span id="exam-year">١٤٤٧</span>هـ</h3>
+                            <h3 id="exam-title" class="text-brand-400 font-bold text-lg">جدول اختبار نهاية الفصل الدراسي الأول للعام ١٤٤٧هـ</h3>
                             <p class="text-gray-400 text-xs" dir="rtl" style="direction: rtl; unicode-bidi: embed;">للصف الأول متوسط - الثاني متوسط - الثالث متوسط</p>
                         </div>
 
@@ -763,10 +763,10 @@
                     const resultDate = (row2[5] || '').trim();
 
                     console.log('[Schedule] examTerm(G2):', examTerm, '| examYear(H2):', examYear, '| resultDay(E2):', resultDay, '| resultDate(F2):', resultDate);
-                    const termEl = document.getElementById('exam-term');
-                    const yearEl = document.getElementById('exam-year');
-                    if (termEl && examTerm)  termEl.textContent = examTerm;
-                    if (yearEl && examYear)  yearEl.textContent = examYear;
+
+                    // Update exam title as full text (avoids inline-span color/spacing issues in PDF)
+                    const titleEl = document.getElementById('exam-title');
+                    if (titleEl) titleEl.textContent = `جدول اختبار نهاية الفصل الدراسي ${examTerm || 'الأول'} للعام ${examYear || '١٤٤٧'}هـ`;
 
                     // Update result day/date
                     const dayEl  = document.getElementById('result-day');
