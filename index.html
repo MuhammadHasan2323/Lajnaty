@@ -164,7 +164,6 @@
             margin: 0 auto !important;
             padding: 10mm !important;
             background-color: white !important;
-            color: black !important;
             border: 2px solid #000 !important;
             direction: rtl;
             font-family: 'Tajawal', sans-serif;
@@ -755,12 +754,15 @@
                     // rows[0] = header row, rows[1] = first data row (Sheet row 2)
                     if (!rows || rows.length < 2) return;
 
+                    // Clean hidden Unicode directional/invisible chars that Google Sheets may add
+                    const cleanVal = (s) => s.replace(/[\u200B-\u200F\u202A-\u202E\u2028-\u2029\uFEFF]/g, '').trim();
+
                     // Columns (0-based): A=0 B=1 C=2 D=3 E=4 F=5 G=6 H=7
                     const row2 = rows[1];
-                    const examTerm   = (row2[6] || '').trim();
-                    const examYear   = (row2[7] || '').trim();
-                    const resultDay  = (row2[4] || '').trim();
-                    const resultDate = (row2[5] || '').trim();
+                    const examTerm   = cleanVal(row2[6] || '');
+                    const examYear   = cleanVal(row2[7] || '');
+                    const resultDay  = cleanVal(row2[4] || '');
+                    const resultDate = cleanVal(row2[5] || '');
 
                     console.log('[Schedule] examTerm(G2):', examTerm, '| examYear(H2):', examYear, '| resultDay(E2):', resultDay, '| resultDate(F2):', resultDate);
 
@@ -828,12 +830,10 @@
                  }
             });
 
-            // Explicitly fix exam title and section headers (may have been set dynamically via textContent)
+            // Explicitly fix exam title - setAttribute with !important overrides any CSS rule
             const examTitleClone = clone.querySelector('#exam-title');
             if (examTitleClone) {
-                examTitleClone.style.color = '#0284c7';
-                examTitleClone.style.direction = 'rtl';
-                examTitleClone.style.unicodeBidi = 'embed';
+                examTitleClone.setAttribute('style', 'color: #0284c7 !important; direction: rtl; unicode-bidi: embed; word-spacing: normal;');
             }
             clone.querySelectorAll('h4.text-brand-400').forEach(el => { el.style.color = '#0284c7'; });
             
