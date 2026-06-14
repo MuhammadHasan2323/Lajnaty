@@ -447,7 +447,7 @@
                                 <li>التقيد بمواعيد الانصراف واستلام الطالب مباشرة بعد نهاية الاختبار.</li>
                                 <li>حسب الأنظمة، لا يُعاد الاختبار للطالب الغائب إلا بعذر تقبله إدارة المدرسة.</li>
                                 <li>إحضار قلم رصاص (HB2) الخاص بتظليل أوراق الإجابة.</li>
-                                <li>سيتم إصدار النتائج بمشيئة الله يوم <span id="result-day">الخميس</span> الموافق <span id="result-date">١٩-٧-١٤٤٧</span>هـ.</li>
+                                <li id="result-sentence">سيتم إصدار النتائج بمشيئة الله يوم الخميس الموافق ١٩-٧-١٤٤٧هـ.</li>
                             </ul>
                         </div>
                     </div>
@@ -768,11 +768,9 @@
                     const titleEl = document.getElementById('exam-title');
                     if (titleEl) titleEl.textContent = `جدول اختبار نهاية الفصل الدراسي ${examTerm || 'الأول'} للعام ${examYear || '١٤٤٧'}هـ`;
 
-                    // Update result day/date
-                    const dayEl  = document.getElementById('result-day');
-                    const dateEl = document.getElementById('result-date');
-                    if (dayEl  && resultDay)  dayEl.textContent  = resultDay;
-                    if (dateEl && resultDate) dateEl.textContent = resultDate;
+                    // Update result sentence as full text (avoids inline-span spacing issues in PDF)
+                    const resultEl = document.getElementById('result-sentence');
+                    if (resultEl) resultEl.textContent = `سيتم إصدار النتائج بمشيئة الله يوم ${resultDay || 'الخميس'} الموافق ${resultDate || '١٩-٧-١٤٤٧'}هـ.`;
 
                     // Populate exam schedule table (data rows start at index 1, skipping header)
                     const tbody = document.getElementById('exam-schedule-tbody');
@@ -830,6 +828,11 @@
                      el.style.color = '#000000'; // Everything else black
                  }
             });
+
+            // Explicitly fix exam title and section headers (may have been set dynamically via textContent)
+            const examTitleClone = clone.querySelector('#exam-title');
+            if (examTitleClone) examTitleClone.style.color = '#0284c7';
+            clone.querySelectorAll('h4.text-brand-400').forEach(el => { el.style.color = '#0284c7'; });
             
             // Force table headers to gray/black
             clone.querySelectorAll('.custom-table th').forEach(th => {
