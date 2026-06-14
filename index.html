@@ -806,7 +806,6 @@
             
             // --- FIX FOR PDF COLORS ---
             clone.style.backgroundColor = '#ffffff';
-            clone.style.color = '#000000';
             clone.style.borderColor = '#000000';
             clone.classList.remove('dark:bg-gray-800', 'dark:border-gray-700', 'bg-gray-800', 'border-gray-700');
             
@@ -831,7 +830,11 @@
 
             // Explicitly fix exam title and section headers (may have been set dynamically via textContent)
             const examTitleClone = clone.querySelector('#exam-title');
-            if (examTitleClone) examTitleClone.style.color = '#0284c7';
+            if (examTitleClone) {
+                examTitleClone.style.color = '#0284c7';
+                examTitleClone.style.direction = 'rtl';
+                examTitleClone.style.unicodeBidi = 'embed';
+            }
             clone.querySelectorAll('h4.text-brand-400').forEach(el => { el.style.color = '#0284c7'; });
             
             // Force table headers to gray/black
