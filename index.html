@@ -173,7 +173,7 @@
         .pdf-card-style #exam-title {
             color: #0284c7 !important;
             direction: rtl !important;
-            unicode-bidi: isolate-override !important;
+            unicode-bidi: plaintext !important;
             word-spacing: normal !important;
             letter-spacing: normal !important;
         }
@@ -777,11 +777,11 @@
 
                     // Update exam title as full text (avoids inline-span color/spacing issues in PDF)
                     const titleEl = document.getElementById('exam-title');
-                    if (titleEl) titleEl.textContent = `جدول اختبار نهاية الفصل الدراسي ${examTerm || 'الأول'} للعام ${examYear || '١٤٤٧'}هـ`;
+                    if (titleEl) titleEl.textContent = `جدول اختبار نهاية الفصل الدراسي ${examTerm || 'الأول'} للعام ${examYear || '١٤٤٧'}‏هـ`;
 
                     // Update result sentence as full text (avoids inline-span spacing issues in PDF)
                     const resultEl = document.getElementById('result-sentence');
-                    if (resultEl) resultEl.textContent = `سيتم إصدار النتائج بمشيئة الله يوم ${resultDay || 'الخميس'} الموافق ${resultDate || '١٩-٧-١٤٤٧'}هـ.`;
+                    if (resultEl) resultEl.textContent = `سيتم إصدار النتائج بمشيئة الله يوم ${resultDay || 'الخميس'} الموافق ${resultDate || '١٩-٧-١٤٤٧'}‏هـ.`;
 
                     // Populate exam schedule table (data rows start at index 1, skipping header)
                     const tbody = document.getElementById('exam-schedule-tbody');
