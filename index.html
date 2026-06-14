@@ -168,6 +168,15 @@
             direction: rtl;
             font-family: 'Tajawal', sans-serif;
         }
+
+        /* Force brand-blue on exam title in PDF regardless of any other rule */
+        .pdf-card-style #exam-title {
+            color: #0284c7 !important;
+            direction: rtl !important;
+            unicode-bidi: isolate-override !important;
+            word-spacing: normal !important;
+            letter-spacing: normal !important;
+        }
         
         .pdf-card-style .grid {
             display: grid !important;
@@ -830,11 +839,7 @@
                  }
             });
 
-            // Explicitly fix exam title - setAttribute with !important overrides any CSS rule
-            const examTitleClone = clone.querySelector('#exam-title');
-            if (examTitleClone) {
-                examTitleClone.setAttribute('style', 'color: #0284c7 !important; direction: rtl; unicode-bidi: embed; word-spacing: normal;');
-            }
+            // Explicitly fix h4 brand headers
             clone.querySelectorAll('h4.text-brand-400').forEach(el => { el.style.color = '#0284c7'; });
             
             // Force table headers to gray/black
