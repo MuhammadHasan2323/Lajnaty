@@ -170,8 +170,7 @@
         }
 
         /* Force brand-blue on exam title in PDF regardless of any other rule */
-        .pdf-card-style #exam-title,
-        .pdf-card-style #result-sentence {
+        .pdf-card-style #exam-title {
             color: #0284c7 !important;
             direction: rtl !important;
             unicode-bidi: isolate !important;
@@ -179,9 +178,21 @@
             letter-spacing: normal !important;
         }
 
-        .pdf-card-style #result-sentence {
-            color: #000000 !important;
-            text-align: right !important;
+        .bidi-token {
+            display: inline-block;
+            direction: ltr !important;
+            unicode-bidi: isolate !important;
+            white-space: nowrap;
+        }
+        .bidi-token-with-unit {
+            display: inline-flex;
+            flex-direction: row;
+            align-items: baseline;
+            gap: 0.25em;
+        }
+        .bidi-unit {
+            direction: rtl !important;
+            unicode-bidi: isolate !important;
         }
         
         .pdf-card-style .grid {
@@ -282,6 +293,7 @@
             border: 1px solid #4b5563;
             padding: 8px;
             text-align: center;
+            unicode-bidi: plaintext;
         }
         .custom-table th {
             background-color: #374151;
@@ -299,6 +311,8 @@
             line-height: 1.5;
         }
         .print-list li {
+            direction: rtl;
+            unicode-bidi: plaintext;
             margin-bottom: 4px;
         }
     </style>
@@ -434,35 +448,21 @@
                     <!-- Exam Schedule Section -->
                     <div class="border-t-2 border-gray-600 pt-4 mt-2">
                         <div class="text-center mb-3">
-                            <h3 id="exam-title" dir="rtl" class="text-brand-400 font-bold text-lg">جدول اختبار نهاية الفصل الدراسي الأول للعام ١٤٤٧هـ</h3>
+                            <h3 id="exam-title" dir="rtl" class="text-brand-400 font-bold text-lg">جدول الاختبارات</h3>
                             <p class="text-gray-400 text-xs" dir="rtl" style="direction: rtl; unicode-bidi: embed;">للصف الأول متوسط - الثاني متوسط - الثالث متوسط</p>
                         </div>
 
                         <table class="custom-table text-gray-200 w-full mb-4">
                             <thead>
-                                <tr>
-                                    <th>اليوم</th>
-                                    <th>التاريخ</th>
-                                    <th>المادة</th>
-                                    <th>زمن الاختبار</th>
-                                </tr>
+                                <tr id="exam-schedule-head"></tr>
                             </thead>
                             <tbody id="exam-schedule-tbody">
                             </tbody>
                         </table>
 
-                        <div class="bg-gray-800 border border-gray-600 p-3 rounded-lg">
-                            <h4 class="text-brand-400 font-bold text-sm mb-2 underline">تعليمات هامة:</h4>
-                            <!-- Fix for bullets removal in PDF -->
-                            <ul class="print-list text-gray-300 text-xs space-y-1 pr-4" dir="rtl">
-                                <li>الاختبارات المركزية تشمل الصف الثالث متوسط فقط، بينما تم إعفاء الأول والثاني وستكون الأسئلة من إعداد المعلم.</li>
-                                <li>الحضور المبكر قبل بداية الاختبار بوقت كافٍ مع التقيد بالزي الرسمي (الثوب).</li>
-                                <li>يمنع إحضار الجوال، وعند اكتشافه مع الطالب في قاعة الإمتحان فسيتم تحرير محضر غش.</li>
-                                <li>التقيد بمواعيد الانصراف واستلام الطالب مباشرة بعد نهاية الاختبار.</li>
-                                <li>حسب الأنظمة، لا يُعاد الاختبار للطالب الغائب إلا بعذر تقبله إدارة المدرسة.</li>
-                                <li>إحضار قلم رصاص (HB2) الخاص بتظليل أوراق الإجابة.</li>
-                                <li id="result-sentence" dir="rtl">سيتم إصدار النتائج بمشيئة الله يوم الخميس الموافق ١٩-٧-١٤٤٧هـ.</li>
-                            </ul>
+                        <div id="exam-instructions-box" class="hidden bg-gray-800 border border-gray-600 p-3 rounded-lg">
+                            <h4 id="exam-instructions-title" class="text-brand-400 font-bold text-sm mb-2 underline"></h4>
+                            <ul id="exam-instructions-list" class="print-list text-gray-300 text-xs space-y-1 pr-4" dir="rtl"></ul>
                         </div>
                     </div>
                 </div>
@@ -499,10 +499,8 @@
     <script>
         const CONFIG = {
             CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVUh9_yERMZ-jsnw3M9RjSJKF4SCg1DFV1uIPgU5kxtzSAmS8J61NC9kJuUBtQRiNKJWu4jpmW7hn7/pub?gid=0&single=true&output=csv',
-            // Sheet 2 – update the gid value to match the actual Sheet 2 tab id from the published URL
             SCHEDULE_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVUh9_yERMZ-jsnw3M9RjSJKF4SCg1DFV1uIPgU5kxtzSAmS8J61NC9kJuUBtQRiNKJWu4jpmW7hn7/pub?gid=868148758&single=true&output=csv',
-            CACHE_KEY: 'thaghr_data_live_v13',
-            CACHE_EXPIRY: 60 * 60 * 1000
+            INSTRUCTIONS_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSVUh9_yERMZ-jsnw3M9RjSJKF4SCg1DFV1uIPgU5kxtzSAmS8J61NC9kJuUBtQRiNKJWu4jpmW7hn7/pub?gid=2083396881&single=true&output=csv'
         };
 
         const els = {
@@ -513,6 +511,72 @@
             btnIcon: document.getElementById('btn-icon'),
             resultSection: document.getElementById('result-section'),
             skeletonLoader: document.getElementById('skeleton-loader'),
+        };
+
+        const SheetData = {
+            cleanValue: (value) => String(value ?? '')
+                .replace(/[\u200B-\u200F\u202A-\u202E\u2028-\u2029\u2066-\u2069\uFEFF]/g, '')
+                .trim(),
+
+            normalizeHeader: (value) => SheetData.cleanValue(value)
+                .replace(/\s+/g, ' ')
+                .toLowerCase(),
+
+            fetchCsv: async (sourceUrl) => {
+                const separator = sourceUrl.includes('?') ? '&' : '?';
+                const response = await fetch(`${sourceUrl}${separator}t=${Date.now()}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const results = Papa.parse(await response.text(), {
+                    header: true,
+                    skipEmptyLines: 'greedy',
+                    transformHeader: header => SheetData.cleanValue(header)
+                });
+
+                const headers = (results.meta.fields || []).filter(Boolean);
+                return { headers, rows: results.data || [] };
+            },
+
+            findHeader: (headers, expectedName) => {
+                const target = SheetData.normalizeHeader(expectedName);
+                return headers.find(header => SheetData.normalizeHeader(header) === target);
+            }
+        };
+
+        const TextDirection = {
+            render: (element, value) => {
+                const text = SheetData.cleanValue(value);
+                const tokenPattern = /([0-9٠-٩۰-۹]+(?:\s*[\/-]\s*[0-9٠-٩۰-۹]+){1,2}(?:\s*هـ)?|[0-9٠-٩۰-۹]+\s*هـ)/g;
+                const tokenOnly = /^([0-9٠-٩۰-۹]+(?:\s*[\/-]\s*[0-9٠-٩۰-۹]+){1,2}(?:\s*هـ)?|[0-9٠-٩۰-۹]+\s*هـ)$/;
+
+                element.replaceChildren();
+                text.split(tokenPattern).filter(Boolean).forEach(part => {
+                    if (!tokenOnly.test(part)) {
+                        element.append(document.createTextNode(part));
+                        return;
+                    }
+
+                    const token = document.createElement('span');
+                    token.className = 'bidi-token';
+                    token.dir = 'ltr';
+                    const unitMatch = part.match(/^(.*?)\s*هـ$/);
+
+                    if (unitMatch) {
+                        token.classList.add('bidi-token-with-unit');
+                        const number = document.createElement('span');
+                        number.textContent = unitMatch[1].trimEnd();
+                        const unit = document.createElement('span');
+                        unit.className = 'bidi-unit';
+                        unit.dir = 'rtl';
+                        unit.textContent = 'هـ';
+                        token.append(number, unit);
+                    } else {
+                        token.textContent = part;
+                    }
+
+                    element.append(token);
+                });
+            }
         };
 
         // DATA SERVICE
@@ -675,8 +739,11 @@
                 document.documentElement.className = 'dark';
                 App.setupListeners();
                 
-                // Load schedule data from Sheet 2
-                ScheduleService.load();
+                // Load independent public content without coupling either sheet to the HTML structure.
+                Promise.allSettled([
+                    ScheduleService.load(),
+                    InstructionsService.load()
+                ]);
 
                 els.searchInput.focus();
             },
@@ -718,64 +785,101 @@
             }
         };
 
-        // SCHEDULE SERVICE – fetches exam schedule and metadata from Sheet 2
+        // SCHEDULE SERVICE – headers and their columns are read directly from Sheet 2.
         const ScheduleService = {
             load: async () => {
                 try {
-                    const url = `${CONFIG.SCHEDULE_CSV_URL}&t=${Date.now()}`;
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    const text = await response.text();
+                    const { headers, rows } = await SheetData.fetchCsv(CONFIG.SCHEDULE_CSV_URL);
+                    if (!headers.length) return;
 
-                    const results = Papa.parse(text, {
-                        header: false,
-                        skipEmptyLines: true
-                    });
+                    const metadataNames = new Set([
+                        'يوم النتيجة',
+                        'تاريخ النتيجة',
+                        'الفصل الدراسي',
+                        'سنة الاختبار'
+                    ].map(SheetData.normalizeHeader));
+                    const scheduleHeaders = headers.filter(header => !metadataNames.has(SheetData.normalizeHeader(header)));
+                    const scheduleRows = rows.filter(row => scheduleHeaders.some(header => SheetData.cleanValue(row[header])));
 
-                    const rows = results.data;
-                    // rows[0] = header row, rows[1] = first data row (Sheet row 2)
-                    if (!rows || rows.length < 2) return;
+                    const termHeader = SheetData.findHeader(headers, 'الفصل الدراسي');
+                    const yearHeader = SheetData.findHeader(headers, 'سنة الاختبار');
+                    const metadataRow = rows.find(row =>
+                        (termHeader && SheetData.cleanValue(row[termHeader])) ||
+                        (yearHeader && SheetData.cleanValue(row[yearHeader]))
+                    ) || rows[0] || {};
+                    const examTerm = termHeader ? SheetData.cleanValue(metadataRow[termHeader]) : '';
+                    const examYear = yearHeader ? SheetData.cleanValue(metadataRow[yearHeader]) : '';
 
-                    // Clean hidden Unicode directional/invisible chars that Google Sheets may add
-                    const cleanVal = (s) => s.replace(/[\u200B-\u200F\u202A-\u202E\u2028-\u2029\uFEFF]/g, '').trim();
-
-                    // Columns (0-based): A=0 B=1 C=2 D=3 E=4 F=5 G=6 H=7
-                    const row2 = rows[1];
-                    const examTerm   = cleanVal(row2[6] || '');
-                    const examYear   = cleanVal(row2[7] || '');
-                    const resultDay  = cleanVal(row2[4] || '');
-                    const resultDate = cleanVal(row2[5] || '');
-
-                    // Isolate dynamic values so numbers and dates cannot reorder the Arabic sentence in PDF.
-                    const isolateBidi = (value) => `\u2068${value}\u2069`;
                     const titleEl = document.getElementById('exam-title');
-                    if (titleEl) titleEl.textContent = `جدول اختبار نهاية الفصل الدراسي ${isolateBidi(examTerm || 'الأول')} للعام ${isolateBidi(examYear || '١٤٤٧')}\u00A0هـ`;
+                    if (titleEl) {
+                        let title = 'جدول الاختبارات';
+                        if (examTerm && examYear) title = `جدول اختبار نهاية الفصل الدراسي ${examTerm} للعام ${examYear} هـ`;
+                        else if (examTerm) title = `جدول اختبار نهاية الفصل الدراسي ${examTerm}`;
+                        else if (examYear) title = `جدول اختبارات العام ${examYear} هـ`;
+                        TextDirection.render(titleEl, title);
+                    }
 
-                    const resultEl = document.getElementById('result-sentence');
-                    if (resultEl) resultEl.textContent = `سيتم إصدار النتائج بمشيئة الله يوم ${isolateBidi(resultDay || 'الخميس')} الموافق ${isolateBidi(resultDate || '١٩-٧-١٤٤٧')}\u00A0هـ.`;
-
-                    // Populate exam schedule table (data rows start at index 1, skipping header)
+                    const thead = document.getElementById('exam-schedule-head');
                     const tbody = document.getElementById('exam-schedule-tbody');
-                    if (tbody) {
-                        tbody.innerHTML = '';
-                        for (let i = 1; i < rows.length; i++) {
-                            const r = rows[i];
-                            const day     = (r[0] || '').trim();
-                            const date    = (r[1] || '').trim();
-                            const subject = (r[2] || '').trim();
-                            const time    = (r[3] || '').trim();
-                            if (!day && !date && !subject && !time) continue;
+                    if (thead && tbody) {
+                        thead.replaceChildren();
+                        tbody.replaceChildren();
+
+                        scheduleHeaders.forEach(header => {
+                            const th = document.createElement('th');
+                            th.textContent = header;
+                            thead.appendChild(th);
+                        });
+
+                        scheduleRows.forEach(row => {
                             const tr = document.createElement('tr');
-                            [day, date, subject, time].forEach(val => {
+                            scheduleHeaders.forEach(header => {
                                 const td = document.createElement('td');
-                                td.textContent = val;
+                                td.dir = 'auto';
+                                TextDirection.render(td, row[header]);
                                 tr.appendChild(td);
                             });
                             tbody.appendChild(tr);
-                        }
+                        });
                     }
                 } catch (e) {
                     console.error('[Schedule] تعذر تحميل الجدول');
+                }
+            }
+        };
+
+        // INSTRUCTIONS SERVICE – every non-empty cell below the Sheet 3 header is one instruction.
+        const InstructionsService = {
+            load: async () => {
+                const box = document.getElementById('exam-instructions-box');
+                const title = document.getElementById('exam-instructions-title');
+                const list = document.getElementById('exam-instructions-list');
+                if (!box || !title || !list) return;
+
+                try {
+                    const { headers, rows } = await SheetData.fetchCsv(CONFIG.INSTRUCTIONS_CSV_URL);
+                    const instructionHeader = SheetData.findHeader(headers, 'تعليمات الاختبارات');
+                    if (!instructionHeader) return;
+
+                    const instructions = rows.flatMap(row =>
+                        SheetData.cleanValue(row[instructionHeader])
+                            .split(/\r?\n/)
+                            .map(line => line.trim())
+                            .filter(Boolean)
+                    );
+
+                    title.textContent = instructionHeader;
+                    list.replaceChildren();
+                    instructions.forEach(instruction => {
+                        const item = document.createElement('li');
+                        item.dir = 'rtl';
+                        TextDirection.render(item, instruction);
+                        list.appendChild(item);
+                    });
+                    box.classList.toggle('hidden', instructions.length === 0);
+                } catch (e) {
+                    box.classList.add('hidden');
+                    console.error('[Instructions] تعذر تحميل التعليمات');
                 }
             }
         };
