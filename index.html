@@ -170,12 +170,18 @@
         }
 
         /* Force brand-blue on exam title in PDF regardless of any other rule */
-        .pdf-card-style #exam-title {
+        .pdf-card-style #exam-title,
+        .pdf-card-style #result-sentence {
             color: #0284c7 !important;
             direction: rtl !important;
-            unicode-bidi: plaintext !important;
+            unicode-bidi: isolate !important;
             word-spacing: normal !important;
             letter-spacing: normal !important;
+        }
+
+        .pdf-card-style #result-sentence {
+            color: #000000 !important;
+            text-align: right !important;
         }
         
         .pdf-card-style .grid {
@@ -428,7 +434,7 @@
                     <!-- Exam Schedule Section -->
                     <div class="border-t-2 border-gray-600 pt-4 mt-2">
                         <div class="text-center mb-3">
-                            <h3 id="exam-title" class="text-brand-400 font-bold text-lg">جدول اختبار نهاية الفصل الدراسي الأول للعام ١٤٤٧هـ</h3>
+                            <h3 id="exam-title" dir="rtl" class="text-brand-400 font-bold text-lg">جدول اختبار نهاية الفصل الدراسي الأول للعام ١٤٤٧هـ</h3>
                             <p class="text-gray-400 text-xs" dir="rtl" style="direction: rtl; unicode-bidi: embed;">للصف الأول متوسط - الثاني متوسط - الثالث متوسط</p>
                         </div>
 
@@ -455,7 +461,7 @@
                                 <li>التقيد بمواعيد الانصراف واستلام الطالب مباشرة بعد نهاية الاختبار.</li>
                                 <li>حسب الأنظمة، لا يُعاد الاختبار للطالب الغائب إلا بعذر تقبله إدارة المدرسة.</li>
                                 <li>إحضار قلم رصاص (HB2) الخاص بتظليل أوراق الإجابة.</li>
-                                <li id="result-sentence">سيتم إصدار النتائج بمشيئة الله يوم الخميس الموافق ١٩-٧-١٤٤٧هـ.</li>
+                                <li id="result-sentence" dir="rtl">سيتم إصدار النتائج بمشيئة الله يوم الخميس الموافق ١٩-٧-١٤٤٧هـ.</li>
                             </ul>
                         </div>
                     </div>
@@ -509,16 +515,12 @@
             skeletonLoader: document.getElementById('skeleton-loader'),
         };
 
-        let studentsData = [];
-
         // DATA SERVICE
         const DataService = {
-            studentsMap: new Map(),
-
-            getData: async () => {
+            getStudent: async (id) => {
                 UIService.setLoading(true);
                 try {
-                    return await DataService.fetchFreshData();
+                    return await DataService.fetchFreshData(id);
                 } catch (err) {
                     throw err;
                 } finally {
@@ -526,7 +528,7 @@
                 }
             },
 
-            fetchFreshData: async (retries = 3) => {
+            fetchFreshData: async (id, retries = 3) => {
                 for (let i = 0; i < retries; i++) {
                     try {
                         return await new Promise((resolve, reject) => {
@@ -542,12 +544,9 @@
                                 skipEmptyLines: true,
                                 complete: (results) => {
                                     if (results.data?.length) {
-                                        const cleanData = results.data
-                                            .map(row => DataService.normalizeRow(row))
-                                            .filter(s => s.id && s.id !== '---' && s.id.length >= 9);
-                                        if (cleanData.length === 0) { reject(new Error('DATA_ERROR')); return; }
-                                        DataService.hydrateMap(cleanData);
-                                        resolve(true);
+                                        const matchingRow = results.data.find(row => DataService.normalizeRow(row).id === id);
+                                        const student = matchingRow ? DataService.normalizeRow(matchingRow) : null;
+                                        resolve(student || null);
                                     } else { reject(new Error('DATA_ERROR')); }
                                 },
                                 error: (err) => reject(new Error('CONNECTION_ERROR'))
@@ -558,13 +557,6 @@
                         await new Promise(r => setTimeout(r, 800));
                     }
                 }
-            },
-
-            hydrateMap: (dataArray) => {
-                DataService.studentsMap.clear();
-                dataArray.forEach(student => {
-                    DataService.studentsMap.set(student.id, student);
-                });
             },
 
             normalizeRow: (row) => {
@@ -583,14 +575,10 @@
                     name: getVal(['اسم الطالب', 'name', 'student'], ['مدرسة', 'school']),
                     grade: getVal(['الصف', 'grade', 'level', 'مستوى']),
                     class: getVal(['الدور', 'class', 'فصل', 'شعبة']),
-                    committee: getVal(['اللجنة', 'اسم اللجنة', 'committee', 'comm']),
+                    committee: getVal(['رقم اللجنة', 'committee number', 'committee no', 'committee', 'comm'], ['مقر اللجنة']),
                     location: getVal(['مقر اللجنة', 'مقر', 'location', 'مكان']),
                     seat: getVal(['رقم الجلوس', 'جلوس', 'seat', 'مقعد'])
                 };
-            },
-
-            findStudent: (id) => {
-                return DataService.studentsMap.get(id);
             }
         };
 
@@ -690,14 +678,6 @@
                 // Load schedule data from Sheet 2
                 ScheduleService.load();
 
-                // Preload Data on Start
-                if (navigator.onLine) {
-                    DataService.getData().catch(e => {
-                         // Silent fail on init, real error on search
-                         console.log("Init fetch failed, will retry on search");
-                    }); 
-                }
-                
                 els.searchInput.focus();
             },
             setupListeners: () => {
@@ -724,8 +704,7 @@
                     return;
                 }
                 try {
-                    await DataService.getData();
-                    const student = DataService.findStudent(query);
+                    const student = await DataService.getStudent(query);
                     if (student) {
                         UIService.renderResult(student);
                     } else {
@@ -744,12 +723,9 @@
             load: async () => {
                 try {
                     const url = `${CONFIG.SCHEDULE_CSV_URL}&t=${Date.now()}`;
-                    console.log('[Schedule] Fetching URL:', url);
                     const response = await fetch(url);
-                    console.log('[Schedule] Response OK:', response.ok, '| Status:', response.status);
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const text = await response.text();
-                    console.log('[Schedule] CSV received, length:', text.length, '| Preview:', text.substring(0, 300));
 
                     const results = Papa.parse(text, {
                         header: false,
@@ -757,9 +733,6 @@
                     });
 
                     const rows = results.data;
-                    console.log('[Schedule] Total rows:', rows.length);
-                    if (rows[0]) console.log('[Schedule] Row 0 (header):', JSON.stringify(rows[0]));
-                    if (rows[1]) console.log('[Schedule] Row 1 (data):', JSON.stringify(rows[1]));
                     // rows[0] = header row, rows[1] = first data row (Sheet row 2)
                     if (!rows || rows.length < 2) return;
 
@@ -773,15 +746,13 @@
                     const resultDay  = cleanVal(row2[4] || '');
                     const resultDate = cleanVal(row2[5] || '');
 
-                    console.log('[Schedule] examTerm(G2):', examTerm, '| examYear(H2):', examYear, '| resultDay(E2):', resultDay, '| resultDate(F2):', resultDate);
-
-                    // Update exam title as full text (avoids inline-span color/spacing issues in PDF)
+                    // Isolate dynamic values so numbers and dates cannot reorder the Arabic sentence in PDF.
+                    const isolateBidi = (value) => `\u2068${value}\u2069`;
                     const titleEl = document.getElementById('exam-title');
-                    if (titleEl) titleEl.textContent = `جدول اختبار نهاية الفصل الدراسي ${examTerm || 'الأول'} للعام ${examYear || '١٤٤٧'}‏هـ`;
+                    if (titleEl) titleEl.textContent = `جدول اختبار نهاية الفصل الدراسي ${isolateBidi(examTerm || 'الأول')} للعام ${isolateBidi(examYear || '١٤٤٧')}\u00A0هـ`;
 
-                    // Update result sentence as full text (avoids inline-span spacing issues in PDF)
                     const resultEl = document.getElementById('result-sentence');
-                    if (resultEl) resultEl.textContent = `سيتم إصدار النتائج بمشيئة الله يوم ${resultDay || 'الخميس'} الموافق ${resultDate || '١٩-٧-١٤٤٧'}‏هـ.`;
+                    if (resultEl) resultEl.textContent = `سيتم إصدار النتائج بمشيئة الله يوم ${isolateBidi(resultDay || 'الخميس')} الموافق ${isolateBidi(resultDate || '١٩-٧-١٤٤٧')}\u00A0هـ.`;
 
                     // Populate exam schedule table (data rows start at index 1, skipping header)
                     const tbody = document.getElementById('exam-schedule-tbody');
@@ -804,7 +775,7 @@
                         }
                     }
                 } catch (e) {
-                    console.error('[Schedule] FAILED:', e);
+                    console.error('[Schedule] تعذر تحميل الجدول');
                 }
             }
         };
