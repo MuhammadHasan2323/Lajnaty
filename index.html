@@ -186,9 +186,14 @@
         }
         .bidi-token-with-unit {
             display: inline-flex;
+            direction: rtl !important;
             flex-direction: row;
             align-items: baseline;
             gap: 0.25em;
+        }
+        .bidi-number {
+            direction: ltr !important;
+            unicode-bidi: isolate !important;
         }
         .bidi-unit {
             direction: rtl !important;
@@ -563,7 +568,10 @@
 
                     if (unitMatch) {
                         token.classList.add('bidi-token-with-unit');
+                        token.dir = 'rtl';
                         const number = document.createElement('span');
+                        number.className = 'bidi-number';
+                        number.dir = 'ltr';
                         number.textContent = unitMatch[1].trimEnd();
                         const unit = document.createElement('span');
                         unit.className = 'bidi-unit';
